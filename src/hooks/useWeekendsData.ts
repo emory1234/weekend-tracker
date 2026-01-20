@@ -117,6 +117,25 @@ export function useUpdateSubtask() {
   });
 }
 
+export function useReorderSubtasks() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ weekend_id, subtasks }: { weekend_id: number; subtasks: { id: string; sort_order: number }[] }) => {
+      // Update all subtasks with their new sort order
+      const updates = subtasks.map(({ id, sort_order }) =>
+        supabase.from('subtasks').update({ sort_order }).eq('id', id)
+      );
+      
+      await Promise.all(updates);
+      return weekend_id;
+    },
+    onSuccess: (weekendId) => {
+      queryClient.invalidateQueries({ queryKey: ['subtasks', weekendId] });
+    },
+  });
+}
+
 export function useDeleteSubtask() {
   const queryClient = useQueryClient();
   

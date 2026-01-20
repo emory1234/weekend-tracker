@@ -1,9 +1,24 @@
 import { useState } from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2 } from 'lucide-react';
-import { useSubtasks, useAddSubtask, useUpdateSubtask, useDeleteSubtask, Subtask } from '@/hooks/useWeekendsData';
+import { Plus } from 'lucide-react';
+import { useSubtasks, useAddSubtask, useReorderSubtasks } from '@/hooks/useWeekendsData';
+import { SubtaskItem } from './SubtaskItem';
 
 interface SubtaskListProps {
   weekendId: number;
@@ -12,11 +27,21 @@ interface SubtaskListProps {
 export function SubtaskList({ weekendId }: SubtaskListProps) {
   const { data: subtasks = [], isLoading } = useSubtasks(weekendId);
   const addSubtask = useAddSubtask();
-  const updateSubtask = useUpdateSubtask();
-  const deleteSubtask = useDeleteSubtask();
+  const reorderSubtasks = useReorderSubtasks();
   
   const [newTaskText, setNewTaskText] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const handleAddSubtask = () => {
     if (!newTaskText.trim()) return;
@@ -32,16 +57,23 @@ export function SubtaskList({ weekendId }: SubtaskListProps) {
     );
   };
 
-  const handleToggleComplete = (subtask: Subtask) => {
-    updateSubtask.mutate({
-      id: subtask.id,
-      weekend_id: weekendId,
-      is_complete: !subtask.is_complete,
-    });
-  };
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
 
-  const handleDelete = (subtask: Subtask) => {
-    deleteSubtask.mutate({ id: subtask.id, weekend_id: weekendId });
+    if (over && active.id !== over.id) {
+      const oldIndex = subtasks.findIndex((s) => s.id === active.id);
+      const newIndex = subtasks.findIndex((s) => s.id === over.id);
+      
+      const reordered = arrayMove(subtasks, oldIndex, newIndex);
+      
+      // Update sort_order for all affected items
+      const updates = reordered.map((subtask, index) => ({
+        id: subtask.id,
+        sort_order: index,
+      }));
+      
+      reorderSubtasks.mutate({ weekend_id: weekendId, subtasks: updates });
+    }
   };
 
   if (isLoading) {
@@ -87,33 +119,19 @@ export function SubtaskList({ weekendId }: SubtaskListProps) {
       {subtasks.length === 0 && !isAdding ? (
         <p className="text-sm text-muted-foreground">No subtasks yet</p>
       ) : (
-        <ul className="space-y-2">
-          {subtasks.map((subtask) => (
-            <li key={subtask.id} className="group flex items-center gap-3">
-              <Checkbox
-                id={subtask.id}
-                checked={subtask.is_complete}
-                onCheckedChange={() => handleToggleComplete(subtask)}
-              />
-              <label
-                htmlFor={subtask.id}
-                className={`flex-1 text-sm cursor-pointer ${
-                  subtask.is_complete ? 'line-through text-muted-foreground' : 'text-foreground'
-                }`}
-              >
-                {subtask.text}
-              </label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleDelete(subtask)}
-                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </li>
-          ))}
-        </ul>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={subtasks.map(s => s.id)} strategy={verticalListSortingStrategy}>
+            <ul className="space-y-2">
+              {subtasks.map((subtask) => (
+                <SubtaskItem key={subtask.id} subtask={subtask} weekendId={weekendId} />
+              ))}
+            </ul>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   );
