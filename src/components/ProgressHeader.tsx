@@ -1,11 +1,15 @@
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { Weekend } from '@/hooks/useWeekendsData';
+import { useAuth } from '@/contexts/AuthContext';
+import { LogOut } from 'lucide-react';
 
 interface ProgressHeaderProps {
   weekends: Weekend[];
 }
 
 export function ProgressHeader({ weekends }: ProgressHeaderProps) {
+  const { user, signOut } = useAuth();
   const completedCount = weekends.filter(w => w.is_complete).length;
   const progressPercent = (completedCount / 10) * 100;
 
@@ -17,11 +21,18 @@ export function ProgressHeader({ weekends }: ProgressHeaderProps) {
             <h1 className="font-serif text-3xl font-bold text-foreground">Resolution Tracker</h1>
             <p className="text-sm text-muted-foreground">Track your 10-weekend journey</p>
           </div>
-          <div className="flex items-center gap-4 sm:min-w-[280px]">
-            <Progress value={progressPercent} className="h-3 flex-1" />
-            <span className="text-sm font-medium text-foreground tabular-nums">
-              {completedCount}/10 ({Math.round(progressPercent)}%)
-            </span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 sm:min-w-[280px]">
+              <Progress value={progressPercent} className="h-3 flex-1" />
+              <span className="text-sm font-medium text-foreground tabular-nums">
+                {completedCount}/10 ({Math.round(progressPercent)}%)
+              </span>
+            </div>
+            {user && (
+              <Button variant="ghost" size="icon" onClick={signOut} title="Sign out">
+                <LogOut className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>

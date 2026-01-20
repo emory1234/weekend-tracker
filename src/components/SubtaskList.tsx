@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-react';
 import { useSubtasks, useAddSubtask, useReorderSubtasks } from '@/hooks/useWeekendsData';
+import { useAuth } from '@/contexts/AuthContext';
 import { SubtaskItem } from './SubtaskItem';
 
 interface SubtaskListProps {
@@ -25,10 +26,11 @@ interface SubtaskListProps {
 }
 
 export function SubtaskList({ weekendId }: SubtaskListProps) {
+  const { user } = useAuth();
   const { data: subtasks = [], isLoading } = useSubtasks(weekendId);
   const addSubtask = useAddSubtask();
   const reorderSubtasks = useReorderSubtasks();
-  
+
   const [newTaskText, setNewTaskText] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
@@ -44,10 +46,10 @@ export function SubtaskList({ weekendId }: SubtaskListProps) {
   );
 
   const handleAddSubtask = () => {
-    if (!newTaskText.trim()) return;
-    
+    if (!newTaskText.trim() || !user) return;
+
     addSubtask.mutate(
-      { weekend_id: weekendId, text: newTaskText.trim() },
+      { weekend_id: weekendId, text: newTaskText.trim(), user_id: user.id },
       {
         onSuccess: () => {
           setNewTaskText('');

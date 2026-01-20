@@ -1,8 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface Weekend {
   id: number;
+  user_id: string;
   title: string;
   description: string | null;
   is_complete: boolean;
@@ -15,6 +17,7 @@ export interface Weekend {
 
 export interface Subtask {
   id: string;
+  user_id: string;
   weekend_id: number;
   text: string;
   is_complete: boolean;
@@ -23,33 +26,39 @@ export interface Subtask {
 }
 
 export function useWeekends() {
+  const { user } = useAuth();
+
   return useQuery({
-    queryKey: ['weekends'],
+    queryKey: ['weekends', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('weekends')
         .select('*')
         .order('id');
-      
+
       if (error) throw error;
       return data as Weekend[];
     },
+    enabled: !!user,
   });
 }
 
 export function useSubtasks(weekendId: number) {
+  const { user } = useAuth();
+
   return useQuery({
-    queryKey: ['subtasks', weekendId],
+    queryKey: ['subtasks', weekendId, user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('subtasks')
         .select('*')
         .eq('weekend_id', weekendId)
         .order('sort_order');
-      
+
       if (error) throw error;
       return data as Subtask[];
     },
+    enabled: !!user,
   });
 }
 
@@ -74,22 +83,23 @@ export function useUpdateWeekend() {
 
 export function useAddSubtask() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async ({ weekend_id, text }: { weekend_id: number; text: string }) => {
+    mutationFn: async ({ weekend_id, text, user_id }: { weekend_id: number; text: string; user_id: string }) => {
       const { data: existing } = await supabase
         .from('subtasks')
         .select('sort_order')
         .eq('weekend_id', weekend_id)
+        .eq('user_id', user_id)
         .order('sort_order', { ascending: false })
         .limit(1);
-      
+
       const nextOrder = existing && existing.length > 0 ? existing[0].sort_order + 1 : 0;
-      
+
       const { error } = await supabase
         .from('subtasks')
-        .insert({ weekend_id, text, sort_order: nextOrder });
-      
+        .insert({ weekend_id, text, sort_order: nextOrder, user_id });
+
       if (error) throw error;
     },
     onSuccess: (_, variables) => {
