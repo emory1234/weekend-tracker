@@ -14,7 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      subtasks: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_complete: boolean | null
+          sort_order: number | null
+          text: string
+          weekend_id: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_complete?: boolean | null
+          sort_order?: number | null
+          text: string
+          weekend_id?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_complete?: boolean | null
+          sort_order?: number | null
+          text?: string
+          weekend_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subtasks_weekend_id_fkey"
+            columns: ["weekend_id"]
+            isOneToOne: false
+            referencedRelation: "weekends"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekends: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: number
+          is_complete: boolean | null
+          notes: string | null
+          timer_started_at: string | null
+          title: string
+          total_time_seconds: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id: number
+          is_complete?: boolean | null
+          notes?: string | null
+          timer_started_at?: string | null
+          title: string
+          total_time_seconds?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          is_complete?: boolean | null
+          notes?: string | null
+          timer_started_at?: string | null
+          title?: string
+          total_time_seconds?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
