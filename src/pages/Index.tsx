@@ -11,7 +11,7 @@ const Index = () => {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
           <h1 className="mb-4 text-2xl font-bold text-destructive">Error Loading Data</h1>
-          <p className="text-muted-foreground">{error.message}</p>
+          <p className="text-muted-foreground">Unable to load your data. Please refresh or try again later.</p>
         </div>
       </div>
     );
