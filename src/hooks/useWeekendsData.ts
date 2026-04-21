@@ -94,11 +94,11 @@ export function useAddSubtask() {
         .order('sort_order', { ascending: false })
         .limit(1);
 
-      const nextOrder = existing && existing.length > 0 ? existing[0].sort_order + 1 : 0;
+      const nextOrder = existing && existing.length > 0 ? (existing[0].sort_order ?? 0) + 1 : 0;
 
       const { error } = await supabase
         .from('subtasks')
-        .insert({ weekend_id, text, sort_order: nextOrder, user_id });
+        .insert([{ weekend_id, text, sort_order: nextOrder, user_id }]);
 
       if (error) throw error;
     },
