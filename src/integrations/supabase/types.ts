@@ -21,6 +21,7 @@ export type Database = {
           is_complete: boolean | null
           sort_order: number | null
           text: string
+          user_id: string
           weekend_id: number | null
         }
         Insert: {
@@ -29,6 +30,7 @@ export type Database = {
           is_complete?: boolean | null
           sort_order?: number | null
           text: string
+          user_id: string
           weekend_id?: number | null
         }
         Update: {
@@ -37,6 +39,7 @@ export type Database = {
           is_complete?: boolean | null
           sort_order?: number | null
           text?: string
+          user_id?: string
           weekend_id?: number | null
         }
         Relationships: [
@@ -60,17 +63,19 @@ export type Database = {
           title: string
           total_time_seconds: number | null
           updated_at: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string | null
           description?: string | null
-          id: number
+          id?: number
           is_complete?: boolean | null
           notes?: string | null
           timer_started_at?: string | null
           title: string
           total_time_seconds?: number | null
           updated_at?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string | null
@@ -82,6 +87,7 @@ export type Database = {
           title?: string
           total_time_seconds?: number | null
           updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
